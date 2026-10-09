@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Set a new password — SocialPilot AI" }, { name: "description", content: "Choose a new password." }, { property: "og:title", content: "Set a new password" }, { property: "og:description", content: "Choose a new SocialPilot password." }] }),
+  head: () => ({
+    meta: [
+      { title: "Set a new password — SocialPilot AI" },
+      { name: "description", content: "Choose a new password." },
+      { property: "og:title", content: "Set a new password" },
+      { property: "og:description", content: "Choose a new SocialPilot password." },
+    ],
+  }),
   component: Reset,
 });
 
@@ -20,14 +27,25 @@ function Reset() {
         onSubmit={async (e) => {
           e.preventDefault();
           const { error } = await supabase.auth.updateUser({ password: pw });
-          if (error) return toast.error(error.message);
+          if (error) {
+            toast.error(error.message);
+            return;
+          }
           toast.success("Password updated");
           navigate({ to: "/dashboard" });
         }}
       >
         <h1 className="text-2xl font-bold">New password</h1>
-        <Input type="password" minLength={8} required value={pw} onChange={(e) => setPw(e.target.value)} />
-        <Button className="w-full" type="submit">Update password</Button>
+        <Input
+          type="password"
+          minLength={8}
+          required
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+        />
+        <Button className="w-full" type="submit">
+          Update password
+        </Button>
       </form>
     </div>
   );

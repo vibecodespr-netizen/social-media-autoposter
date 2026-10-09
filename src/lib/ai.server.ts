@@ -1,6 +1,9 @@
 // Server-only Lovable AI Gateway helper (streaming Responses API, strict JSON output).
 export class AiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
   }
 }
@@ -61,11 +64,20 @@ export async function aiJson<T>(opts: {
       const data = line.slice(5).trim();
       if (!data || data === "[DONE]") continue;
       try {
-        const ev = JSON.parse(data) as { type: string; delta?: string; response?: { error?: { message?: string } }; message?: string };
+        const ev = JSON.parse(data) as {
+          type: string;
+          delta?: string;
+          response?: { error?: { message?: string } };
+          message?: string;
+        };
         if (ev.type === "response.output_text.delta" && ev.delta) text += ev.delta;
         else if (ev.type === "response.failed" || ev.type === "error")
-          throw new AiError(500, ev.response?.error?.message || ev.message || "AI generation failed");
-        else if (ev.type === "response.refusal.done") throw new AiError(403, "The AI declined this request");
+          throw new AiError(
+            500,
+            ev.response?.error?.message || ev.message || "AI generation failed",
+          );
+        else if (ev.type === "response.refusal.done")
+          throw new AiError(403, "The AI declined this request");
       } catch (e) {
         if (e instanceof AiError) throw e;
       }

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/public/hooks/autopilot")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: valid } = await supabaseAdmin.rpc("verify_cron_token", { _token: token });
         if (!valid) return new Response("Unauthorized", { status: 401 });
-        const { runAutopilot } = await import("@/lib/autopilot.server");
+        const { runAutopilot, dispatchDuePosts } = await import("@/lib/autopilot.server");
         const { data: brands } = await supabaseAdmin
           .from("brands")
           .select("id")
@@ -24,6 +24,16 @@ export const Route = createFileRoute("/api/public/hooks/autopilot")({
             results.push(await runAutopilot(supabaseAdmin, b.id));
           } catch (e) {
             results.push({ ok: false, message: (e as Error).message });
+          }
+          try {
+            const { data: full } = await supabaseAdmin
+              .from("brands")
+              .select("*")
+              .eq("id", b.id)
+              .single();
+            if (full) await dispatchDuePosts(supabaseAdmin, full);
+          } catch (e) {
+            console.error("dispatch failed", e);
           }
         }
         return Response.json({ processed: results.length });
