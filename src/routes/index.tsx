@@ -1,6 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Radar, PenLine, CalendarClock, ShieldCheck, ArrowRight } from "lucide-react";
+import { Radar, PenLine, CalendarClock, ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
+import { signInAsGuest } from "@/lib/guest";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,6 +51,17 @@ const steps = [
 ];
 
 function Landing() {
+  const navigate = useNavigate();
+  const [guestBusy, setGuestBusy] = useState(false);
+
+  async function guest() {
+    setGuestBusy(true);
+    const r = await signInAsGuest();
+    setGuestBusy(false);
+    if (r.error) toast.error(r.error);
+    else navigate({ to: "/dashboard" });
+  }
+
   return (
     <div className="min-h-screen bg-background bg-signal">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
@@ -83,7 +97,14 @@ function Landing() {
                 Start your autopilot <ArrowRight />
               </Link>
             </Button>
+            <Button size="lg" variant="outline" onClick={guest} disabled={guestBusy}>
+              <Sparkles /> {guestBusy ? "Starting…" : "Try as guest"}
+            </Button>
           </div>
+          <p className="mt-4 max-w-md text-xs text-muted-foreground">
+            No account needed to look around. Guest sessions are temporary — create an account to
+            keep your work.
+          </p>
         </section>
         <section className="grid gap-4 py-20 md:grid-cols-4">
           {steps.map((s, i) => (
